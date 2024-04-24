@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package result;
+
+option go_package = "github.com/gin-gonic/examples/protobuf/result";
+
+import "score_server/score_info.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/any.proto";
+// 引入google/api/annotations.proto文件
+import "google/api/annotations.proto";
+
+// 定义Result消息
+message Result {
+  string url = 1;
+  optional string title = 2;
+  repeated string snippets = 3; // 字符串数组类型
+  oneof notice_way{
+    string email = 4;
+    string phone = 5;
+  }
+  google.protobuf.Int64Value price = 6;
+
+  string content = 11;
+  google.protobuf.Timestamp timestamp = 7;
+  google.protobuf.Any details = 8;
+}
+
+// 定义SearchResponse消息
+message SearchResponse {
+  // 引用上面定义的Result消息类型，作为results字段的类型
+  repeated Result results = 1; // repeated关键词标记，说明results字段是一个数组
+  score_server.RtaResponse rtaresp = 2; // 自定义消息类型RtaResponse
+}
+
+service GetResultService {
+  rpc GetResult(SearchRequest) returns (SearchResponse) {}
+}
+
+// 定义SearchRequest消息
+message SearchRequest {
+  string query = 1;
+  int32 page_number = 2;
+  int32 result_per_page = 3;
+}
+
+message Price {
+  int64 market_price = 1;  // 建议使用下划线的命名方式
+  int64 sale_price = 2;
+}
+
+message Book {
+  string title = 1;
+  Price price = 2;
+  // Timestamp是大写T!大写T!大写T!
+  google.protobuf.Timestamp date = 4;  // 注意包名前缀
+}
+
+service BookService{
+  rpc Create(Book)returns(Book){
+    option (google.api.http) = {
+      post: "/v1/book"
+      body: "*"
+    };
+  };
+}
